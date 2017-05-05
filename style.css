@@ -1,0 +1,37 @@
+table{
+    height: 50px;
+    border: 1px solid black;
+}
+td{
+    text-align: center;
+    width: 40px;
+}
+.NA{
+    background-color: white;
+}
+.NSSS{
+    background-color: red;
+}
+.NPSS{
+    background-color: blue;
+}
+.NPBCH{
+    background-color: yellow;
+}
+.NPDCCH{
+    background-color: white;
+}
+.NPDSCH{
+    background-color: white;
+}
+.NPRACH{
+    background-color: green;
+}
+.NPUSCH{
+    background-color: white;
+}
+#loadconfigform{
+   position:fixed;
+   left:100px;
+   bottom:0px;
+}
