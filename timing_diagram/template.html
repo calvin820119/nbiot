@@ -1,0 +1,24 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<script tpye="text/javascript" ""src="script.js"></script>
+</head>
+<body>
+<h1>Downlink</h1>
+<table class=dl style="width:$1px;">
+<tbody>
+<tr>$2</tr>
+</tbody>
+</table>
+<h1>Uplink</h1>
+<table class=ul style="width:$1px;">
+<tbody>
+<tr>$3</tr>
+</tbody>
+</table>
+<form id="loadconfigform">Shift to(subframe):
+<input type="text" name="configname" />
+<input type="button" value="Go" onclick="scrollWin(document.getElementsByName('configname')[0].value)" />
+</form>
+</body>
+</html>
