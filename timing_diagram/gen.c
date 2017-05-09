@@ -4,11 +4,8 @@
 
 #define num_subframe_per_frame 10
 #define SIZE 20
-const char html_p0[] = "<html><head><link rel=\"stylesheet\" href=\"style.css\"><script tpye=\"text/javascript\" ""src=\"script.js\"></script></head><body><h1>Downlink</h1><table class=dl style=\"width:";
-const char html_p1[] = "px;\"""><tbody><tr>";
-const char html_p2[] = "</tr></tbody></table><h1>Uplink</h1><table class=ul style=\"width:";
-const char html_p3[] = "px;\"""><tbody><tr>";
-const char html_p4[] = "</tr></tbody></table><form id=\"loadconfigform\">Shift to(subframe):<input type=\"text\" name=\"configname\" /><input type=\"button\" value=\"Go\" onclick=\"scrollWin(document.getElementsByName('configname')[0].value)\" /></form></body></html>";
+
+//todo modify dequeue, partition all files
 
 char output_file_name[] = "output.html";
 char template_file_name[] = "template.html";
@@ -42,7 +39,7 @@ typedef struct printer_s{
 }printer_t;
 
 typedef struct render_s{
-	printer_t *printer[num_printer]
+	printer_t *printer[num_printer];
 	
 }render_t;
 
@@ -55,8 +52,8 @@ typedef enum printer_ee{
 }printer_e;
 
 char printer_char[num_printer][3] = {
-	"$1",
-	"$2",
+	"$1",	//	reserve for DL
+	"$2",	//	reserve for UL
 	"$3",
 	"$4"
 };
@@ -76,7 +73,6 @@ char channel_name[channels_length][SIZE] = {
 
 channel_t *dl_scheduled_bitmap[10];
 channel_t *ul_scheduled_bitmap[10];
-FILE *fp;
 
 
 
@@ -85,7 +81,7 @@ void enqueue(printer_t **head, char *value){
 	new_node = (printer_t *)malloc(sizeof(printer_t));
 	new_node->next = (printer_t *)0;
 	//	memcpy from input to queue!
-	memcpy(new_node->str, value, strlen(value));
+	memcpy(new_node->str, value, strlen(value)+1);
 	if((printer_t *)0 == *head){
         *head = new_node;
     }else{
@@ -139,7 +135,7 @@ void mac_scheduler(int frames){
 	}
 }
 
-void load_dl_frames(int frames){
+void load_dl_frames(int frames, FILE *fp){
 	uint32_t frame;
 	uint32_t subframe;
 	for(frame=0;frame<frames;++frame)
@@ -148,7 +144,7 @@ void load_dl_frames(int frames){
 	}
 }
 
-void load_ul_frames(int frames){
+void load_ul_frames(int frames, FILE *fp){
 	uint32_t frame;
 	uint32_t subframe;
 	for(frame=0;frame<frames;++frame)
@@ -161,11 +157,11 @@ void render_html(render_t *render, printer_e target, char *str){
 	enqueue(&render->printer[target], str);
 }
 
-void output_html(FILE *fi, FILE *fo){
-	char str[100], *p1, *p2, *p3, *p4;
+void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){
+	char str[100], str1[100], *p1, *p2, *p3, *p4;
 	uint8_t len;
 	while(!feof(fi)){
-		fscanf(fi, "%s", str);
+		fscanf(fi, "%s\n", str);
 		len=strlen(str);
 		p1 = strstr(str, printer_char[0]);
 		p2 = strstr(str, printer_char[1]);
@@ -173,26 +169,43 @@ void output_html(FILE *fi, FILE *fo){
 		p4 = strstr(str, printer_char[3]);
 		
 		if((char *)0 != p1){
-			fwrite(str, , sizeof(str))
-			while(dequeue())
+			printf("p1\n");
+			fwrite(str, 1, p1-str, fo);
+			load_dl_frames(num_total_frame, fo);
+			fprintf(fo, "%s\n", p1+2);
+			printf("p1\n");
+			continue;
 		}
 		if((char *)0 != p2){
-			while(dequeue())
+			printf("p2\n");
+			fwrite(str, 1, p2-str, fo);
+			load_ul_frames(num_total_frame, fo);
+			fprintf(fo, "%s\n", p2+2);
+			printf("p2\n");
+			continue;
 		}
 		if((char *)0 != p3){
-			while(dequeue())
+			printf("p3\n");
+			fwrite(str, 1, p3-str, fo);
+			while(dequeue(&render->printer[2], str1)){
+				fprintf(fo, "%s", str1);
+			}
+			fprintf(fo, "%s\n", p3+2);
+			printf("p3\n");
+			continue;
 		}
 		if((char *)0 != p4){
-			while(dequeue())
+			printf("p4\n");
+			fwrite(str, 1, p4-str, fo);
+			while(dequeue(&render->printer[3], str1)){
+				fprintf(fo, "%s", str1);
+			}
+			fprintf(fo, "%s\n", p4+2);
+			printf("p4\n");
+			continue;
 		}
+		fprintf(fo, "%s\n", str);
 	}
-	
-	
-	//fprintf(fp, "%s%d%s", html_p0, 40*num_total_frame*num_subframe_per_frame, html_p1);
-	load_dl_frames(num_total_frame);
-	//fprintf(fp, "%s%d%s", html_p2, 40*num_total_frame*num_subframe_per_frame, html_p3);
-	load_ul_frames(num_total_frame);
-	fprintf(fp, "%s", html_p4);
 }
 
 int main(int argc, char **argv){
@@ -202,6 +215,10 @@ int main(int argc, char **argv){
 	uint32_t num_total_frame = 10;	//	for DL/UL
 	
 	render_t render;
+	render.printer[0] = (printer_t *)0;
+	render.printer[1] = (printer_t *)0;
+	render.printer[2] = (printer_t *)0;
+	render.printer[3] = (printer_t *)0;
 	
 	if( (FILE *)0 == (fo = fopen(output_file_name, "w"))){
 		printf("[0x1]failed to open $s!\n", output_file_name);
@@ -219,13 +236,14 @@ int main(int argc, char **argv){
 	
 	mac_scheduler(num_total_frame);
 	
-	sprintf(str, "%d", 40*num_total_frame*num_subframe_per_frame);
-	render_html(render, PRINTER_1, str);
+	sprintf(str, "%d\0", 40*num_total_frame*num_subframe_per_frame);
 	
-	output_html(fi, fo);
+	render_html(&render, PRINTER_3, str);
+	render_html(&render, PRINTER_4, str);
 	
+	output_html(&render, num_total_frame, fi, fo);
 	
-	fclose(fo;)
+	fclose(fo);
 	fclose(fi);
 	
 	return 0;
