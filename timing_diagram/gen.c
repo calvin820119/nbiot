@@ -246,5 +246,6 @@ int main(int argc, char **argv){
 	fclose(fo);
 	fclose(fi);
 	
+	system("pause");
 	return 0;
 } 
