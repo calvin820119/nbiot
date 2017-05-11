@@ -9,15 +9,15 @@ void generate_broadcast_signal(uint32_t cur_frame, channel_t channel, void *cont
 void mac_scheduler(int frames);
 
 extern channel_t *dl_scheduled_bitmap[10];
-extern channel_t *ul_scheduled_bitmap[10];
+extern channel_t *ul_scheduled_bitmap[48][10];
 char output_file_name[] = "../out/output.html";
 char template_file_name[] = "../ref/template.html";
 
 int main(int argc, char **argv){
 	char str[20];
 	FILE *fo, *fi;
-	uint32_t i;
-	uint32_t num_total_frame = 10;	//	for DL/UL
+	uint32_t i, ii;
+	uint32_t num_total_frame = 1;	//	for DL/UL
 	
 	render_t render;
 	render.printer[0] = (printer_t *)0;
@@ -36,12 +36,22 @@ int main(int argc, char **argv){
 	for(i=0;i<num_subframe_per_frame;++i){
 		//	calloc to 0 -> channel_t.NA
 		dl_scheduled_bitmap[i] = (channel_t *)calloc(num_total_frame, sizeof(channel_t));
-		ul_scheduled_bitmap[i] = (channel_t *)calloc(num_total_frame, sizeof(channel_t));
+		for(ii=0;ii<48;++ii)
+		ul_scheduled_bitmap[ii][i] = (channel_t *)calloc(num_total_frame, sizeof(channel_t));
 	}
+	
+	for(i=0;i<41;i++){
+	    ul_scheduled(0, 1, i, NPRACH);
+    }
+    for(;i<48;i++){
+	    ul_scheduled(0, 3, i, NPRACH);
+    }
 	
 	mac_scheduler(num_total_frame);
 	
 	sprintf(str, "%d\0", 40*num_total_frame*num_subframe_per_frame);
+	
+	init_render(&render);
 	
 	render_html(&render, PRINTER_1, str);
 	

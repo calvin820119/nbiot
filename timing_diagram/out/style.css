@@ -1,19 +1,23 @@
 table{
     height: 50px;
-    border: 1px solid black;
+    border: 1px solid #00; border-collapse: collapse;
 }
-td{
-    text-align: center;
+
+tr, td {
+    border: 1px solid #00;
+	text-align: center;
     width: 40px;
 }
+
+
 .NA{
     background-color: white;
 }
 .NSSS{
-    background-color: red;
+    background-color: #0070C0;
 }
 .NPSS{
-    background-color: blue;
+    background-color: red;
 }
 .NPBCH{
     background-color: yellow;
@@ -30,8 +34,13 @@ td{
 .NPUSCH{
     background-color: white;
 }
+
+.subcarrier{
+	font-size: 1px;
+}
+
 #loadconfigform{
    position:fixed;
-   left:100px;
+   left:300px;
    bottom:0px;
 }

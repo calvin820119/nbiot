@@ -1,7 +1,10 @@
 #include "render.h"
 
+#define UL_ALL_3750HZ
+
 channel_t *dl_scheduled_bitmap[10];
-channel_t *ul_scheduled_bitmap[10];
+channel_t *ul_scheduled_bitmap[48][10];
+uint8_t carrier_has_nprach[12] = {0};
 
 char channel_name[channels_length][10] = {
 	"NA",
@@ -19,6 +22,9 @@ char channel_name[channels_length][10] = {
 char printer_char[num_printer][4] = {
 	"$DL",	//	reserve for DL
 	"$UL",	//	reserve for UL
+	"$RF",
+	"$SF",
+	"$F1",
 	"$1"
 };
 
@@ -28,15 +34,18 @@ void enqueue(printer_t **head, char *value){
 	new_node->next = (printer_t *)0;
 	//	memcpy from input to queue!
 	memcpy(new_node->str, value, strlen(value)+1);
+	
 	if((printer_t *)0 == *head){
-        *head = new_node;
+	    *head = new_node;
     }else{
         iterator = *head;
+        printf("%d %d", iterator, iterator->next);
         while((printer_t *)0 != iterator->next){
             iterator = iterator->next;
         }
         iterator->next = new_node;
     }
+    
 }
 
 int dequeue(printer_t **head, char *o_str){
@@ -50,22 +59,101 @@ int dequeue(printer_t **head, char *o_str){
 	return 1;
 }
 
+
+
+void load_html_table_group1(int frames, FILE *fp){
+    uint32_t frame;
+    
+	for(frame=0;frame<frames;++frame){
+		fprintf(fp, "<colgroup span=\"10\"></colgroup>\n");
+	}
+}
+
+void load_frames_info(int frames, FILE *fp){
+    uint32_t frame;
+    
+	for(frame=0;frame<frames;++frame){
+		fprintf(fp, "<td colspan=\"10\" class=\"FRAME\">%d</td>\n", frame);
+	}
+}
+
+void load_subframes_info(int frames, FILE *fp){
+    uint32_t frame;
+	uint32_t subframe;
+	
+	for(frame=0;frame<frames;++frame)
+	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
+		fprintf(fp, "<td class=\"SUBFRAME\">%d</td>\n", subframe);
+	}
+}
+
 void load_dl_frames(int frames, FILE *fp){//, channel_t *dl_scheduled_bitmap[10]){//need to confirm this method
 	uint32_t frame;
 	uint32_t subframe;
 	for(frame=0;frame<frames;++frame)
 	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
-		fprintf(fp, "<td class=%s>%d</td>\n", channel_name[dl_scheduled_bitmap[subframe][frame]], subframe);
+		fprintf(fp, "<td class=%s></td>\n", channel_name[dl_scheduled_bitmap[subframe][frame]]);
 	}
 }
 
 void load_ul_frames(int frames, FILE *fp){//, channel_t *ul_scheduled_bitmap[10]){
-	uint32_t frame;
+    uint32_t frame;
 	uint32_t subframe;
-	for(frame=0;frame<frames;++frame)
-	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
-		fprintf(fp, "<td class=%s>%d</td>\n", channel_name[ul_scheduled_bitmap[subframe][frame]], subframe);
-	}
+	int8_t subcarrier, subcarrier_15k;
+	
+	for(subcarrier=47;subcarrier>=0;--subcarrier){
+	    subcarrier_15k=subcarrier/4;
+        
+        #ifdef UL_ALL_3750HZ
+        fprintf(fp, "<tr>\n");
+        if(0==((subcarrier+1)%4))
+            fprintf(fp, "<td rowspan=\"4\">%d-%d</td>\n", subcarrier-3, subcarrier);
+        #else
+        if(carrier_has_nprach[subcarrier_15k]){
+            fprintf(fp, "<tr>\n");
+            if(0==((subcarrier+1)%4))
+                fprintf(fp, "<td rowspan=\"4\">%d-%d</td>\n", subcarrier-3, subcarrier);
+        }else{
+            if(0==((subcarrier+1)%4))
+                fprintf(fp, "<tr>\n<td>%d-%d</td>\n", subcarrier-3, subcarrier);
+        }
+        #endif
+    	for(frame=0;frame<frames;++frame)
+    	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
+    	    #ifdef UL_ALL_3750HZ
+    	    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+            #else
+            if( carrier_has_nprach[subcarrier_15k] ){
+    	        if(NPRACH==ul_scheduled_bitmap[subcarrier][subframe][frame]){
+    	            fprintf(fp, "<td class=NPRACH></td>\n");
+                }else{
+                    if(0==((subcarrier+1)%4))
+                        fprintf(fp, "<td rowspan=\"4\" class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+                }
+            }else{
+                if(0==((subcarrier+1)%4))
+                    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+            } 
+    	    #endif
+        }
+        
+        #ifdef UL_ALL_3750HZ
+        fprintf(fp, "</tr>\n");
+        #else
+        if(carrier_has_nprach[subcarrier_15k]){
+            fprintf(fp, "</tr>\n");
+        }else{
+            if(0==((subcarrier+1)%4))
+                fprintf(fp, "</tr>\n");
+        }
+        #endif
+    }
+}
+
+void init_render(render_t *render){
+    int i;
+    for(i=0;i<num_PRINTER;++i)
+        render->printer[i] = (printer_t *)0;
 }
 
 void render_html(render_t *render, printer_e target, char *str){
@@ -85,21 +173,43 @@ void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, 
 		if((char *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_dl_frames(num_total_frame, fo);//, dl_scheduled_bitmap);
-			fprintf(fo, "%s\n", p+2);
+			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
 		p = strstr(str, printer_char[PRINTER_UL]);
 		if((char *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_ul_frames(num_total_frame, fo);//, ul_scheduled_bitmap);
-			fprintf(fo, "%s\n", p+2);
+			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
+		
+		p = strstr(str, printer_char[PRINTER_FRAME_INFO]);
+		if((char *)0 != p){
+			fwrite(str, 1, p-str, fo);
+			load_frames_info(num_total_frame, fo);//, ul_scheduled_bitmap);
+			fprintf(fo, "%s\n", p+3);
+			continue;
+		}
+		p = strstr(str, printer_char[PRINTER_SUBFRAME_INFO]);
+		if((char *)0 != p){
+			fwrite(str, 1, p-str, fo);
+			load_subframes_info(num_total_frame, fo);//, ul_scheduled_bitmap);
+			fprintf(fo, "%s\n", p+3);
+			continue;
+		}
+		/*p = strstr(str, printer_char[PRINTER_FRAME_T1]);
+		if((char *)0 != p){
+			fwrite(str, 1, p-str, fo);
+			load_html_table_group1(num_total_frame, fo);//, ul_scheduled_bitmap);
+			fprintf(fo, "%s\n", p+3);
+			continue;
+		}*/
 		for(i=PRINTER_1;i<num_PRINTER;i++){
 			p = strstr(str, printer_char[i]);
 			if((char *)0 != p){
 				fwrite(str, 1, p-str, fo);
-				iterator = render->printer[2];
+				iterator = render->printer[i];
 				
 				while((printer_t *)0 != iterator){
 					fprintf(fo, "%s", iterator->str);
@@ -113,3 +223,13 @@ void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, 
 			fprintf(fo, "%s\n", str);
 	}
 }
+
+
+
+void ul_scheduled(uint32_t frame, uint32_t subframe, uint32_t carrier, channel_t channel){
+    ul_scheduled_bitmap[carrier][subframe][frame] = channel;
+    if(NPRACH == channel)
+        carrier_has_nprach[carrier/4] = 1;
+}
+
+

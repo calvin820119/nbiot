@@ -5,17 +5,89 @@
 </head>
 <body>
 <h1>Downlink</h1>
-<table class=dl style="width:$1px;">
+<table class=dl style="width:$1px;" border="3" >
 <tbody>
-<tr>$DL</tr>
+<tr>
+<td>11</td>
+$DL
+</tr>
+<tr>
+<td>10</td>
+$DL
+</tr>
+<tr>
+<td>9</td>
+$DL
+</tr>
+<tr>
+<td>8</td>
+$DL
+</tr>
+<tr>
+<td>7</td>
+$DL
+</tr>
+<tr>
+<td>6</td>
+$DL
+</tr>
+<tr>
+<td>5</td>
+$DL
+</tr>
+<tr>
+<td>4</td>
+$DL
+</tr>
+<tr>
+<td>3</td>
+$DL
+</tr>
+<tr>
+<td>2</td>
+$DL
+</tr>
+<tr>
+<td>1</td>
+$DL
+</tr>
+<tr>
+<td>0</td>
+$DL
+</tr>
+<tr>
+<td>subframe</td>
+$SF</tr>
+<tr>
+<td>frame</td>
+$RF</tr>
 </tbody>
 </table>
 <h1>Uplink</h1>
-<table class=ul style="width:$1px;">
+<table class=dl style="width:$1px;" border="3" >
 <tbody>
-<tr>$UL</tr>
+$UL
+<tr>
+<td>subframe</td>
+$SF</tr>
+<tr>
+<td>frame</td>
+$RF</tr>
 </tbody>
 </table>
+<br/>
+<br/>
+<table class=dl style="width:200px;" border="3" >
+<tr><td rowspan="6">DL</td><td>NA</td><td class="NA"></td></tr>
+<tr><td>NSSS</td><td class="NSSS"></td></tr>
+<tr><td>NPSS</td><td class="NPSS"></td></tr>
+<tr><td>NPBCH</td><td class="NPBCH"></td></tr>
+<tr><td>NPDCCH</td><td class="NPDCCH"></td></tr>
+<tr><td>NPDSCH</td><td class="NPDSCH"></td></tr>
+<tr><td rowspan="2">UL</td><td>NPRACH</td><td class="NPRACH"></td></tr>
+<tr><td>NPUSCH</td><td class="NPUSCH"></td></tr>
+</table>
+
 <form id="loadconfigform">Shift to(subframe):
 <input type="text" name="configname" />
 <input type="button" value="Go" onclick="scrollWin(document.getElementsByName('configname')[0].value)" />
