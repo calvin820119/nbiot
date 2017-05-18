@@ -23,14 +23,18 @@ tr, td {
     background-color: yellow;
 }
 .NPDCCH{
-    background-color: white;
+    background-color: #CC00CC;
 }
 .NPDSCH{
-    background-color: white;
+    background-color: #666666;
 }
 .NPDSCH_SIB1{
     background-color: #EE7700;
 }
+.NPDSCH_SIB2{   
+    background-color: #00DD00
+}
+
 .NPRACH{
     background-color: green;
 }
