@@ -1,12 +1,12 @@
 #include "render.h"
 
-#define UL_ALL_3750HZ
+//#define UL_ALL_3750HZ
 
 channel_t *dl_scheduled_bitmap[10];
 channel_t *ul_scheduled_bitmap[48][10];
 uint8_t carrier_has_nprach[12] = {0};
 
-char channel_name[channels_length][10] = {
+uint8_t channel_name[channels_length][12] = {
 	"NA",
 	//DL
 	"NPSS",
@@ -14,12 +14,13 @@ char channel_name[channels_length][10] = {
 	"NPBCH",
 	"NPDCCH",
 	"NPDSCH",
+	"NPDSCH_SIB1",
 	//UL
 	"NPRACH",
 	"NPUSCH"
 };
 
-char printer_char[num_printer][4] = {
+uint8_t printer_char[num_printer][4] = {
 	"$DL",	//	reserve for DL
 	"$UL",	//	reserve for UL
 	"$RF",
@@ -28,7 +29,7 @@ char printer_char[num_printer][4] = {
 	"$1"
 };
 
-void enqueue(printer_t **head, char *value){
+void enqueue(printer_t **head, uint8_t *value){
 	printer_t *new_node, *iterator;
 	new_node = (printer_t *)malloc(sizeof(printer_t));
 	new_node->next = (printer_t *)0;
@@ -45,10 +46,9 @@ void enqueue(printer_t **head, char *value){
         }
         iterator->next = new_node;
     }
-    
 }
 
-int dequeue(printer_t **head, char *o_str){
+uint32_t dequeue(printer_t **head, uint8_t *o_str){
 	printer_t *del;
 	
 	del = *head;
@@ -61,15 +61,15 @@ int dequeue(printer_t **head, char *o_str){
 
 
 
-void load_html_table_group1(int frames, FILE *fp){
+/*void load_html_table_group1(uint32_t frames, FILE *fp){
     uint32_t frame;
     
 	for(frame=0;frame<frames;++frame){
 		fprintf(fp, "<colgroup span=\"10\"></colgroup>\n");
 	}
-}
+}*/
 
-void load_frames_info(int frames, FILE *fp){
+void load_frames_info(uint32_t frames, FILE *fp){
     uint32_t frame;
     
 	for(frame=0;frame<frames;++frame){
@@ -77,7 +77,7 @@ void load_frames_info(int frames, FILE *fp){
 	}
 }
 
-void load_subframes_info(int frames, FILE *fp){
+void load_subframes_info(uint32_t frames, FILE *fp){
     uint32_t frame;
 	uint32_t subframe;
 	
@@ -87,7 +87,7 @@ void load_subframes_info(int frames, FILE *fp){
 	}
 }
 
-void load_dl_frames(int frames, FILE *fp){//, channel_t *dl_scheduled_bitmap[10]){//need to confirm this method
+void load_dl_frames(uint32_t frames, FILE *fp){//, channel_t *dl_scheduled_bitmap[10]){//need to confirm this method
 	uint32_t frame;
 	uint32_t subframe;
 	for(frame=0;frame<frames;++frame)
@@ -96,7 +96,7 @@ void load_dl_frames(int frames, FILE *fp){//, channel_t *dl_scheduled_bitmap[10]
 	}
 }
 
-void load_ul_frames(int frames, FILE *fp){//, channel_t *ul_scheduled_bitmap[10]){
+void load_ul_frames(uint32_t frames, FILE *fp){//, channel_t *ul_scheduled_bitmap[10]){
     uint32_t frame;
 	uint32_t subframe;
 	int8_t subcarrier, subcarrier_15k;
@@ -151,17 +151,17 @@ void load_ul_frames(int frames, FILE *fp){//, channel_t *ul_scheduled_bitmap[10]
 }
 
 void init_render(render_t *render){
-    int i;
+    uint32_t i;
     for(i=0;i<num_PRINTER;++i)
         render->printer[i] = (printer_t *)0;
 }
 
-void render_html(render_t *render, printer_e target, char *str){
+void render_html(render_t *render, printer_e target, uint8_t *str){
 	enqueue(&render->printer[target], str);
 }
 
-void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, channel_t **dl_scheduled_bitmap, channel_t **ul_scheduled_bitmap){
-	char str[100], str1[100], *p, *p2, *p3, *p4;
+void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo){//, channel_t **dl_scheduled_bitmap, channel_t **ul_scheduled_bitmap){
+	uint8_t str[100], str1[100], *p, *p2, *p3, *p4;
 	uint8_t i;
 	printer_t *iterator;
 	uint8_t len;
@@ -170,14 +170,14 @@ void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, 
 		len=strlen(str);
 		
 		p = strstr(str, printer_char[PRINTER_DL]);
-		if((char *)0 != p){
+		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_dl_frames(num_total_frame, fo);//, dl_scheduled_bitmap);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
 		p = strstr(str, printer_char[PRINTER_UL]);
-		if((char *)0 != p){
+		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_ul_frames(num_total_frame, fo);//, ul_scheduled_bitmap);
 			fprintf(fo, "%s\n", p+3);
@@ -185,29 +185,22 @@ void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, 
 		}
 		
 		p = strstr(str, printer_char[PRINTER_FRAME_INFO]);
-		if((char *)0 != p){
+		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_frames_info(num_total_frame, fo);//, ul_scheduled_bitmap);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
 		p = strstr(str, printer_char[PRINTER_SUBFRAME_INFO]);
-		if((char *)0 != p){
+		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
 			load_subframes_info(num_total_frame, fo);//, ul_scheduled_bitmap);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
-		/*p = strstr(str, printer_char[PRINTER_FRAME_T1]);
-		if((char *)0 != p){
-			fwrite(str, 1, p-str, fo);
-			load_html_table_group1(num_total_frame, fo);//, ul_scheduled_bitmap);
-			fprintf(fo, "%s\n", p+3);
-			continue;
-		}*/
 		for(i=PRINTER_1;i<num_PRINTER;i++){
 			p = strstr(str, printer_char[i]);
-			if((char *)0 != p){
+			if((uint8_t *)0 != p){
 				fwrite(str, 1, p-str, fo);
 				iterator = render->printer[i];
 				
@@ -219,17 +212,45 @@ void output_html(render_t *render, int num_total_frame, FILE *fi, FILE *fo){//, 
 				break;
 			}
 		}
-		if((char *)0 == p)
+		if((uint8_t *)0 == p)
 			fprintf(fo, "%s\n", str);
 	}
 }
 
+void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti){
+	dl_scheduled_bitmap[subframe][frame] = channel;
+	
+	switch(channel){
+		case NPSS:
+			break;
+		case NSSS:
+			break;
+		case NPBCH:
+			break;
+		case NPDCCH:
+			break;
+		case NPDSCH:
+			if(SI_RNTI == rnti){
+				dl_scheduled_bitmap[subframe][frame] = NPDSCH_SIB1;
+			}
+			break;
 
+		default:
+			break;
+	}
+}
 
 void ul_scheduled(uint32_t frame, uint32_t subframe, uint32_t carrier, channel_t channel){
-    ul_scheduled_bitmap[carrier][subframe][frame] = channel;
-    if(NPRACH == channel)
-        carrier_has_nprach[carrier/4] = 1;
+	ul_scheduled_bitmap[carrier][subframe][frame] = channel;
+	switch(channel){
+		case NPRACH:
+		    carrier_has_nprach[carrier/4] = 1;
+			break;
+		case NPUSCH:
+			break;
+		default:
+			break;
+	}
 }
 
 

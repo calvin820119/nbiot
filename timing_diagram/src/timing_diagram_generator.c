@@ -6,15 +6,15 @@
 #include "types.h"
 
 void generate_broadcast_signal(uint32_t cur_frame, channel_t channel, void *content);
-void mac_scheduler(int frames);
+void mac_scheduler(uint32_t frames);
 
 extern channel_t *dl_scheduled_bitmap[10];
 extern channel_t *ul_scheduled_bitmap[48][10];
-char output_file_name[] = "../out/output.html";
-char template_file_name[] = "../ref/template.html";
+uint8_t output_file_name[] = "../out/output.html";
+uint8_t template_file_name[] = "../ref/template.html";
 
 int main(int argc, char **argv){
-	char str[20];
+	uint8_t str[20];
 	FILE *fo, *fi;
 	uint32_t i, ii;
 	uint32_t num_total_frame = 1;	//	for DL/UL
@@ -60,12 +60,11 @@ int main(int argc, char **argv){
 	fclose(fo);
 	fclose(fi);
 	
-	system("pause");
+	//system("pause");
 	return 0;
 } 
 
-
-
+/*
 void generate_broadcast_signal(uint32_t cur_frame, channel_t channel, void *content){
 	//assert(channel <= NPBCH);
 	switch(channel){
@@ -81,21 +80,29 @@ void generate_broadcast_signal(uint32_t cur_frame, channel_t channel, void *cont
 		default:
 			break;
 	}
-}
+}*/
 
-void mac_scheduler(int frames){
+void mac_scheduler(uint32_t frames){
 	uint32_t cur_frame;
 	uint32_t cur_subframe;
 	//assert(scheduled_bitmap);
 	for(cur_frame=0; cur_frame<frames; ++cur_frame){
 		//	downlink 
-		generate_broadcast_signal(cur_frame, NPBCH, (void *)0);
+		//#0
+		dl_scheduled(cur_frame, 0, NPBCH, 0);//generate_broadcast_signal(cur_frame, NPBCH, (void *)0);
 		
-		generate_broadcast_signal(cur_frame, NPSS, (void *)0);
+		//#4
+		dl_scheduled(cur_frame, 4, NPDSCH, SI_RNTI);
+		//#5
+		dl_scheduled(cur_frame, 5, NPSS, 0);//generate_broadcast_signal(cur_frame, NPSS, (void *)0);
 		
+		
+		//#9
 		if(cur_frame&0x1);
-		else
-			generate_broadcast_signal(cur_frame, NSSS, (void *)0);
+		else{
+			dl_scheduled(cur_frame, 9, NSSS, 0);//generate_broadcast_signal(cur_frame, NSSS, (void *)0);
+		}
+			
 			
 		//	uplink
 	}

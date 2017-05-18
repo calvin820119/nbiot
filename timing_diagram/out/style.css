@@ -28,6 +28,9 @@ tr, td {
 .NPDSCH{
     background-color: white;
 }
+.NPDSCH_SIB1{
+    background-color: #EE7700;
+}
 .NPRACH{
     background-color: green;
 }

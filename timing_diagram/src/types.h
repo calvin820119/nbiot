@@ -4,6 +4,9 @@
 
 #define num_subframe_per_frame 10
 
+#define SI_RNTI 0xffff
+
+
 typedef enum channel_e{
 	NA=0,
 	//DL
@@ -12,6 +15,7 @@ typedef enum channel_e{
 	NPBCH,
 	NPDCCH,
 	NPDSCH,
+	NPDSCH_SIB1,
 	//UL
 	NPRACH,
 	NPUSCH,
