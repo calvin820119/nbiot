@@ -172,8 +172,8 @@ uint8_t is_sib1_frame(uint32_t cur_frame){
     int32_t nr_mod_256 = cur_frame & 0xff;
     
     int32_t temp1 = (nr_mod_256 % (256/s.repetitions)) - s.starting_rf;
-    
-    if(temp1 & 0x1 || temp1 < 0){
+    //printf("%d\n", 256/s.repetitions);
+    if(temp1 & 0x1 || temp1 < 0 || temp1 >= 16 ){
         return 0x0;
     }else{
         return 0x1;
