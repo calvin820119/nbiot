@@ -14,7 +14,7 @@ uint8_t channel_name[channels_length][12] = {
 	"NPBCH",
 	"NPDCCH",
 	"NPDSCH",
-	"NPDSCH_SIB1",
+	"NPDSCH_SIB",
 	//UL
 	"NPRACH",
 	"NPUSCH"
@@ -231,7 +231,7 @@ void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t
 			break;
 		case NPDSCH:
 			if(SI_RNTI == rnti){
-				dl_scheduled_bitmap[subframe][frame] = NPDSCH_SIB1;
+				dl_scheduled_bitmap[subframe][frame] = NPDSCH_SIB;
 			}
 			break;
 

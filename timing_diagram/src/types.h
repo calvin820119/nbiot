@@ -15,7 +15,7 @@ typedef enum channel_e{
 	NPBCH,
 	NPDCCH,
 	NPDSCH,
-	NPDSCH_SIB1,
+	NPDSCH_SIB,
 	//UL
 	NPRACH,
 	NPUSCH,

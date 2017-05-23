@@ -15,12 +15,47 @@ extern channel_t *ul_scheduled_bitmap[48][10];
 uint8_t output_file_name[] = "../out/output.html";
 uint8_t template_file_name[] = "../ref/template.html";
 
-typedef struct sib1_nb_s{
+typedef struct sib1_nb_sched_s{
     uint8_t repetitions;    //  4, 8, 16
     uint8_t starting_rf;
+}sib1_nb_sched_t;
+
+typedef struct sib1_nb_s{
+    sibs_nb_sched_t scheduling_info[6];
 }sib1_nb_t;
 
-sib1_nb_t sib1;
+typedef enum si_periodicity_e{
+    RF_64,
+    RF_128
+}si_periodicity_t;
+
+typedef enum si_repetition_pattern_e{
+    every2RF,
+    every4RF
+}si_repetition_pattern_t;
+
+typedef enum si_tb_3{
+    b56,
+    b120
+}si_tb_t;
+
+typedef enum sibs_e{
+    sib2=0x1,
+    sib3=0x2,
+    sib4=0x4,
+    sib5=0x8,
+    sib14=0x10,
+    sib16=0x20
+}sibs_t;
+
+typedef struct sibs_nb_sched_s{
+    si_periodicity_t si_periodicity;
+    si_repetition_pattern_t si_repetition_pattern;
+    sibs_t sib_mapping_info;   //bit flag
+    si_tb_t si_tb;
+}sibs_nb_sched_t;
+
+sib1_nb_sched_t sib1;
 
 int main(int argc, char **argv){
 	uint8_t str[20];
@@ -166,7 +201,7 @@ void mac_scheduler(uint32_t frames){
 }
 
 uint8_t is_sib1_frame(uint32_t cur_frame){
-    sib1_nb_t s;
+    sib1_nb_sched_t s;
     s = sib1;
     
     int32_t nr_mod_256 = cur_frame & 0xff;

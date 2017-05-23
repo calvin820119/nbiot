@@ -28,8 +28,13 @@ tr, td {
 .NPDSCH{
     background-color: #666666;
 }
-.NPDSCH_SIB1{
+.NPDSCH_SIB{
     background-color: #EE7700;
+	-webkit-transition: background-color 2s; /* Safari */
+    transition: background-color 2s;
+}
+.NPDSCH_SIB:hover { 
+    background-color: black;
 }
 .NPDSCH_SIB2{   
     background-color: #00DD00
