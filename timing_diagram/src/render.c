@@ -59,16 +59,6 @@ uint32_t dequeue(printer_t **head, uint8_t *o_str){
 	return 1;
 }
 
-
-
-/*void load_html_table_group1(uint32_t frames, FILE *fp){
-    uint32_t frame;
-    
-	for(frame=0;frame<frames;++frame){
-		fprintf(fp, "<colgroup span=\"10\"></colgroup>\n");
-	}
-}*/
-
 void load_frames_info(uint32_t frames, FILE *fp){
     uint32_t frame;
     
@@ -217,7 +207,7 @@ void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo)
 	}
 }
 
-void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti){
+void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti, uint8_t *string){
 	dl_scheduled_bitmap[subframe][frame] = channel;
 	
 	switch(channel){
@@ -232,7 +222,9 @@ void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t
 		case NPDSCH:
 			if(SI_RNTI == rnti){
 				dl_scheduled_bitmap[subframe][frame] = NPDSCH_SIB;
-			}
+			}else{
+			    dl_scheduled_bitmap[subframe][frame] = NPDSCH;
+            }
 			break;
 
 		default:

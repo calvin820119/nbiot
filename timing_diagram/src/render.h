@@ -43,7 +43,7 @@ void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo)
 
 
 
-void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti);
+void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti, uint8_t *string);
 void ul_scheduled(uint32_t frame, uint32_t subframe, uint32_t carrier, channel_t channel);
 
 #endif

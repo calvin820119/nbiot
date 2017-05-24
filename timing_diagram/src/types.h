@@ -7,6 +7,15 @@
 #define SI_RNTI 0xffff
 
 
+typedef unsigned char uint8_t;
+typedef char int8_t;
+typedef unsigned short uint16_t;
+typedef short int16_t;
+typedef unsigned long uint32_t;
+typedef long int32_t;
+
+//uint8_t number_char[17] = "0123456789ABCDEF";
+
 typedef enum channel_e{
 	NA=0,
 	//DL
@@ -27,11 +36,5 @@ typedef enum channel_e{
 
 
 
-typedef unsigned char uint8_t;
-typedef char int8_t;
-typedef unsigned short uint16_t;
-typedef short int16_t;
-typedef unsigned long uint32_t;
-typedef long int32_t;
 
 #endif
