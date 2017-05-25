@@ -107,9 +107,9 @@ $RF</tr>
 <tr><td colspan="3">NPUSCH</td><td class="NPUSCH"></td></tr>
 </table>
 
-<form id="loadconfigform">Shift to(subframe):
-<input type="text" name="configname" />
+<div id="loadconfigform">Shift to(subframe):
+<input type="text" name="configname" onClick="this.select();" onkeypress="press_key(event);" />
 <input type="button" value="Go" onclick="scrollWin(document.getElementsByName('configname')[0].value)" />
-</form>
+</div>
 </body>
 </html>
