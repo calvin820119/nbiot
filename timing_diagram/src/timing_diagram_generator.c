@@ -13,9 +13,9 @@ uint8_t is_sibs_frame(uint32_t cur_frame);
 uint8_t is_sib1_frame(uint32_t cur_frame);
 void init_SI();
 
-extern channel_t *dl_scheduled_bitmap[10];
-extern channel_t *ul_scheduled_bitmap[48][10];
-uint8_t output_file_name[] = "../out/output.html";
+extern resource_t *dl_scheduled_bitmap[10];
+extern resource_t *ul_scheduled_bitmap[48][10];
+uint8_t output_file_name[] = "../../../out/output.html";
 uint8_t template_file_name[] = "../ref/template.html";
 
 typedef struct sib1_nb_sched_s{
@@ -52,15 +52,15 @@ typedef enum si_repetition_pattern_e{
     every16thRF=16
 }si_repetition_pattern_t;
 
-typedef enum si_tb_3{
-    b56, 
-    b120, 
-    b208, 
-    b256, 
-    b328, 
-    b440, 
-    b552, 
-    b680
+typedef enum si_tb_e{
+    b56=2, 
+    b120=2, 
+    b208=8, 
+    b256=8, 
+    b328=8, 
+    b440=8, 
+    b552=8, 
+    b680=8
 }si_tb_t;
 
 typedef enum sibs_e{
@@ -78,7 +78,8 @@ typedef struct sibs_nb_sched_s{
     sibs_t sib_mapping_info;   //bit flag
     si_tb_t si_tb;
     
-    uint16_t budget;
+    int16_t num_sf_tx;
+    int16_t repetition_pattern_counter;
 }sibs_nb_sched_t;
 
 typedef struct sib1_nb_s{
@@ -113,9 +114,9 @@ int main(int argc, char **argv){
 	};
 	for(i=0;i<num_subframe_per_frame;++i){
 		//	calloc to 0 -> channel_t.NA
-		dl_scheduled_bitmap[i] = (channel_t *)calloc(num_total_frame, sizeof(channel_t));
+		dl_scheduled_bitmap[i] = (resource_t *)calloc(num_total_frame, sizeof(resource_t));
 		for(ii=0;ii<48;++ii)
-		ul_scheduled_bitmap[ii][i] = (channel_t *)calloc(num_total_frame, sizeof(channel_t));
+		ul_scheduled_bitmap[ii][i] = (resource_t *)calloc(num_total_frame, sizeof(resource_t));
 	}
 	
 	init_SI();
@@ -196,19 +197,19 @@ void init_SI(){
     sib1.scheduling_info[0].sib_mapping_info = sib2_v | sib3_v;
     sib1.scheduling_info[0].si_periodicity = rf64;
     sib1.scheduling_info[0].si_repetition_pattern = every4thRF;
-    sib1.scheduling_info[0].si_tb = b120;
+    sib1.scheduling_info[0].si_tb = b680;
     ++sib1.sizeof_scheduling_info;
     
     sib1.scheduling_info[1].sib_mapping_info = sib4_v | sib5_v;
     sib1.scheduling_info[1].si_periodicity = rf128;
     sib1.scheduling_info[1].si_repetition_pattern = every2ndRF;
-    sib1.scheduling_info[1].si_tb = b120;
+    sib1.scheduling_info[1].si_tb = b680;
     ++sib1.sizeof_scheduling_info;
     
     sib1.scheduling_info[2].sib_mapping_info = sib14_v | sib16_v;
     sib1.scheduling_info[2].si_periodicity = rf256;
     sib1.scheduling_info[2].si_repetition_pattern = every8thRF;
-    sib1.scheduling_info[2].si_tb = b120;
+    sib1.scheduling_info[2].si_tb = b680;
     ++sib1.sizeof_scheduling_info;
 }
 
@@ -216,7 +217,7 @@ void mac_scheduler(uint32_t frames){
 	uint32_t cur_frame;
 	uint32_t cur_subframe;
 	uint16_t downlink_bitmap;
-	uint32_t i;
+	int32_t sf;
 	uint8_t ret;
 	uint8_t sibs;
 	//assert(scheduled_bitmap);
@@ -245,15 +246,30 @@ void mac_scheduler(uint32_t frames){
         }
 		
 		if((sibs=is_sibs_frame(cur_frame))!=0x0){     //  SIBs every frame only search one first available subframe in this version, TODO modified according to the si-TB
-		    i=0;
-            while(downlink_bitmap&BV(i)){
-                i++;
+		    sf=0;
+		    //printf("sibs %d\n", sibs-1);
+		    //printf("num_sf_tx %d\n", sib1.scheduling_info[sibs-1].num_sf_tx);
+		    while(sib1.scheduling_info[sibs-1].num_sf_tx > 0 && sf>=0){
+		        while(downlink_bitmap&BV(sf)){
+                    ++sf;
+                    if(sf==10){
+                        sf=-1;
+                        break;
+                    }
+                }
+                if(sf>=0){
+                    //printf("valid sf %d\n", i);
+                    dl_scheduled(cur_frame, sf, NPDSCH, SI_RNTI, "SI-RNTI");
+    		        downlink_bitmap |= BV(sf);
+    		        --sib1.scheduling_info[sibs-1].num_sf_tx;
+    		        ++sf;
+                }
             }
-            dl_scheduled(cur_frame, i, NPDSCH, SI_RNTI, "S");
-		    downlink_bitmap |= i;
         }
-			
+        
 		//	uplink
+		
+		
 	}
 }
 
@@ -284,13 +300,14 @@ uint8_t is_sibs_frame(uint32_t cur_frame){
      //   printf("\t%d\n", sib1.scheduling_info[i].si_periodicity);
         if( cur_frame % sib1.scheduling_info[i].si_periodicity == (x+sib1.si_radio_frame_offset) ){
             //printf("frame[%d] sibs[%d] started \n", cur_frame, i); system("pause");
-            sib1.scheduling_info[i].budget = sib1.si_window_length / sib1.scheduling_info[i].si_repetition_pattern;
+            sib1.scheduling_info[i].repetition_pattern_counter = sib1.si_window_length / sib1.scheduling_info[i].si_repetition_pattern;
+            sib1.scheduling_info[i].num_sf_tx = sib1.scheduling_info[i].si_tb;
         }
         
-        if( sib1.scheduling_info[i].budget > 0 ){
+        if( sib1.scheduling_info[i].repetition_pattern_counter > 0 ){
            // printf("frame[%d] sibs[%d] %d \n", cur_frame, i, sib1.scheduling_info[i].budget); system("pause");
             if( (cur_frame % sib1.scheduling_info[i].si_periodicity) % sib1.scheduling_info[i].si_repetition_pattern == 0x0){
-                --sib1.scheduling_info[i].budget;
+                --sib1.scheduling_info[i].repetition_pattern_counter;
                 return i+1;
             }
         }

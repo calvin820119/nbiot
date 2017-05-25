@@ -5,7 +5,8 @@
 </head>
 <body>
 <h1>Downlink</h1>
-<table class=dl style="width:$1px;" border="3" >
+<!--p id="displayArea"></p-->
+<table class=dl id=dltable style="width:$1px;" border="3" >
 <tbody>
 <tr>
 <td>11</td>
@@ -77,6 +78,17 @@ $RF</tr>
 </table>
 <br/>
 <br/>
+
+<div class="ctx-table" id="ctx-table">
+<table border=0 class="tag" cellpadding="10" cellspacing="6" style="width:230px; border-collapse: initial !important;" >
+<tr id=table-channel-tr>	<td style="font-weight : bold; background-color:#E0E0E0; font-family: Verdana;">Channel</td><td id=table-channel style="font-family: Verdana; background-color:#E9E9E9;"></td>	</tr>
+<tr id=table-rnti-tr>	<td style="font-weight : bold; background-color:#E0E0E0; font-family: Verdana;">RNTI</td><td id=table-rnti style="font-family: Verdana; background-color:#E9E9E9;"></td>	</tr>
+<tr id=table-ctx-tr>	<td style="font-weight : bold; background-color:#E0E0E0; font-family: Verdana;">Content</td><td id=table-ctx style="font-family: Verdana; background-color:#E9E9E9;"></td>	</tr>
+</table>
+</div>
+
+
+
 <table class=dl style="width:200px;" border="3" >
 <tr><td rowspan="7">DL</td><td colspan="2">NA</td><td class="NA"></td></tr>
 <tr><td colspan="2">NSSS</td><td class="NSSS"></td></tr>

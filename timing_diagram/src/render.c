@@ -2,8 +2,8 @@
 
 //#define UL_ALL_3750HZ
 
-channel_t *dl_scheduled_bitmap[10];
-channel_t *ul_scheduled_bitmap[48][10];
+resource_t *dl_scheduled_bitmap[10];
+resource_t *ul_scheduled_bitmap[48][10];
 uint8_t carrier_has_nprach[12] = {0};
 
 uint8_t channel_name[channels_length][12] = {
@@ -77,16 +77,28 @@ void load_subframes_info(uint32_t frames, FILE *fp){
 	}
 }
 
-void load_dl_frames(uint32_t frames, FILE *fp){//, channel_t *dl_scheduled_bitmap[10]){//need to confirm this method
+void load_dl_frames(uint32_t frames, FILE *fp){
 	uint32_t frame;
 	uint32_t subframe;
+	
+	uint8_t *str;
+	
+	
+	
 	for(frame=0;frame<frames;++frame)
 	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
-		fprintf(fp, "<td class=%s></td>\n", channel_name[dl_scheduled_bitmap[subframe][frame]]);
+	    if((uint8_t *)0 != dl_scheduled_bitmap[subframe][frame].ctx){
+	        str = dl_scheduled_bitmap[subframe][frame].ctx;
+        }else{
+            str = "\0";
+        }
+    
+		fprintf(fp, "<td onmouseover=\"touch_function(this)\" class=\"%s %s\"></td>\n", channel_name[dl_scheduled_bitmap[subframe][frame].channel], str);
+		//printf("%s\n", dl_scheduled_bitmap[subframe][frame].ctx);
 	}
 }
 
-void load_ul_frames(uint32_t frames, FILE *fp){//, channel_t *ul_scheduled_bitmap[10]){
+void load_ul_frames(uint32_t frames, FILE *fp){
     uint32_t frame;
 	uint32_t subframe;
 	int8_t subcarrier, subcarrier_15k;
@@ -111,18 +123,18 @@ void load_ul_frames(uint32_t frames, FILE *fp){//, channel_t *ul_scheduled_bitma
     	for(frame=0;frame<frames;++frame)
     	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
     	    #ifdef UL_ALL_3750HZ
-    	    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+    	    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame].channel]);
             #else
             if( carrier_has_nprach[subcarrier_15k] ){
-    	        if(NPRACH==ul_scheduled_bitmap[subcarrier][subframe][frame]){
+    	        if(NPRACH==ul_scheduled_bitmap[subcarrier][subframe][frame].channel){
     	            fprintf(fp, "<td class=NPRACH></td>\n");
                 }else{
                     if(0==((subcarrier+1)%4))
-                        fprintf(fp, "<td rowspan=\"4\" class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+                        fprintf(fp, "<td rowspan=\"4\" class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame].channel]);
                 }
             }else{
                 if(0==((subcarrier+1)%4))
-                    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame]]);
+                    fprintf(fp, "<td class=%s></td>\n", channel_name[ul_scheduled_bitmap[subcarrier][subframe][frame].channel]);
             } 
     	    #endif
         }
@@ -150,7 +162,7 @@ void render_html(render_t *render, printer_e target, uint8_t *str){
 	enqueue(&render->printer[target], str);
 }
 
-void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo){//, channel_t **dl_scheduled_bitmap, channel_t **ul_scheduled_bitmap){
+void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo){
 	uint8_t str[100], str1[100], *p, *p2, *p3, *p4;
 	uint8_t i;
 	printer_t *iterator;
@@ -162,14 +174,14 @@ void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo)
 		p = strstr(str, printer_char[PRINTER_DL]);
 		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
-			load_dl_frames(num_total_frame, fo);//, dl_scheduled_bitmap);
+			load_dl_frames(num_total_frame, fo);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
 		p = strstr(str, printer_char[PRINTER_UL]);
 		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
-			load_ul_frames(num_total_frame, fo);//, ul_scheduled_bitmap);
+			load_ul_frames(num_total_frame, fo);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
@@ -177,14 +189,14 @@ void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo)
 		p = strstr(str, printer_char[PRINTER_FRAME_INFO]);
 		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
-			load_frames_info(num_total_frame, fo);//, ul_scheduled_bitmap);
+			load_frames_info(num_total_frame, fo);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
 		p = strstr(str, printer_char[PRINTER_SUBFRAME_INFO]);
 		if((uint8_t *)0 != p){
 			fwrite(str, 1, p-str, fo);
-			load_subframes_info(num_total_frame, fo);//, ul_scheduled_bitmap);
+			load_subframes_info(num_total_frame, fo);
 			fprintf(fo, "%s\n", p+3);
 			continue;
 		}
@@ -207,8 +219,8 @@ void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo)
 	}
 }
 
-void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti, uint8_t *string){
-	dl_scheduled_bitmap[subframe][frame] = channel;
+void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti, uint8_t *ctx){
+	dl_scheduled_bitmap[subframe][frame].channel = channel;
 	
 	switch(channel){
 		case NPSS:
@@ -221,9 +233,10 @@ void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t
 			break;
 		case NPDSCH:
 			if(SI_RNTI == rnti){
-				dl_scheduled_bitmap[subframe][frame] = NPDSCH_SIB;
+				dl_scheduled_bitmap[subframe][frame].channel = NPDSCH_SIB;
+				dl_scheduled_bitmap[subframe][frame].ctx = ctx;
 			}else{
-			    dl_scheduled_bitmap[subframe][frame] = NPDSCH;
+			    dl_scheduled_bitmap[subframe][frame].channel = NPDSCH;
             }
 			break;
 
@@ -233,7 +246,7 @@ void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t
 }
 
 void ul_scheduled(uint32_t frame, uint32_t subframe, uint32_t carrier, channel_t channel){
-	ul_scheduled_bitmap[carrier][subframe][frame] = channel;
+	ul_scheduled_bitmap[carrier][subframe][frame].channel = channel;
 	switch(channel){
 		case NPRACH:
 		    carrier_has_nprach[carrier/4] = 1;

@@ -30,6 +30,11 @@ typedef enum printer_ee{
 	num_PRINTER
 }printer_e;
 
+typedef struct resource_s{
+    channel_t channel;
+    uint8_t *ctx;
+}resource_t;
+
 void init_render(render_t *head);
 void enqueue(printer_t **head, uint8_t *value);
 uint32_t dequeue(printer_t **head, uint8_t *o_str);
@@ -40,8 +45,6 @@ void load_frames_info(uint32_t frames, FILE *fp);
 void load_html_table_group1(uint32_t frames, FILE *fp);
 void render_html(render_t *render, printer_e target, uint8_t *str);
 void output_html(render_t *render, uint32_t num_total_frame, FILE *fi, FILE *fo);//, channel_t **dl_scheduled_bitmap, channel_t **ul_scheduled_bitmap);
-
-
 
 void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t rnti, uint8_t *string);
 void ul_scheduled(uint32_t frame, uint32_t subframe, uint32_t carrier, channel_t channel);
