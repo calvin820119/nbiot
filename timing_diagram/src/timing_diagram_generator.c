@@ -7,6 +7,10 @@
 
 #define BV(X) (0x1<<X)
 
+uint8_t number_char[17] = "0123456789ABCDEF";
+
+uint8_t sibs_str[6][20] = { "LIST1", "LIST2", "LIST3", "LIST4", "LIST5", "LIST6"};
+
 void generate_broadcast_signal(uint32_t cur_frame, channel_t channel, void *content);
 void mac_scheduler(uint32_t frames);
 uint8_t is_sibs_frame(uint32_t cur_frame);
@@ -230,7 +234,7 @@ void mac_scheduler(uint32_t frames){
 		
 		//#4
 		if(is_sib1_frame(cur_frame)){
-		    dl_scheduled(cur_frame, 4, NPDSCH, SI_RNTI, "1");
+		    dl_scheduled(cur_frame, 4, NPDSCH, SI_RNTI, "SIB1");
 		    downlink_bitmap |= BV(4);
         }
 		    
@@ -258,8 +262,7 @@ void mac_scheduler(uint32_t frames){
                     }
                 }
                 if(sf>=0){
-                    //printf("valid sf %d\n", i);
-                    dl_scheduled(cur_frame, sf, NPDSCH, SI_RNTI, "SI-RNTI");
+                    dl_scheduled(cur_frame, sf, NPDSCH, SI_RNTI, sibs_str[sibs-1]);
     		        downlink_bitmap |= BV(sf);
     		        --sib1.scheduling_info[sibs-1].num_sf_tx;
     		        ++sf;

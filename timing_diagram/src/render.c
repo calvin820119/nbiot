@@ -81,19 +81,25 @@ void load_dl_frames(uint32_t frames, FILE *fp){
 	uint32_t frame;
 	uint32_t subframe;
 	
-	uint8_t *str;
+	uint8_t *ctx, *rnti;
 	
 	
 	
 	for(frame=0;frame<frames;++frame)
 	for(subframe=0;subframe<num_subframe_per_frame;++subframe){
 	    if((uint8_t *)0 != dl_scheduled_bitmap[subframe][frame].ctx){
-	        str = dl_scheduled_bitmap[subframe][frame].ctx;
+	        ctx = dl_scheduled_bitmap[subframe][frame].ctx;
         }else{
-            str = "\0";
+            ctx = "\0";
+        }
+        
+        if((uint8_t *)0 != dl_scheduled_bitmap[subframe][frame].rnti){
+	        rnti = dl_scheduled_bitmap[subframe][frame].rnti;
+        }else{
+            rnti = "\0";
         }
     
-		fprintf(fp, "<td onmouseover=\"touch_function(this)\" class=\"%s %s\"></td>\n", channel_name[dl_scheduled_bitmap[subframe][frame].channel], str);
+		fprintf(fp, "<td onmouseover=\"touch_function(this)\" class=\"%s %s %s\"></td>\n", channel_name[dl_scheduled_bitmap[subframe][frame].channel], rnti, ctx);
 		//printf("%s\n", dl_scheduled_bitmap[subframe][frame].ctx);
 	}
 }
@@ -234,9 +240,12 @@ void dl_scheduled(uint32_t frame, uint32_t subframe, channel_t channel, uint16_t
 		case NPDSCH:
 			if(SI_RNTI == rnti){
 				dl_scheduled_bitmap[subframe][frame].channel = NPDSCH_SIB;
+				dl_scheduled_bitmap[subframe][frame].rnti = "SI_RNTI";
 				dl_scheduled_bitmap[subframe][frame].ctx = ctx;
 			}else{
 			    dl_scheduled_bitmap[subframe][frame].channel = NPDSCH;
+			    dl_scheduled_bitmap[subframe][frame].rnti = "UNKNOW";
+			    dl_scheduled_bitmap[subframe][frame].ctx = (uint8_t *)0;
             }
 			break;
 

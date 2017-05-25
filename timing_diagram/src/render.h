@@ -32,6 +32,7 @@ typedef enum printer_ee{
 
 typedef struct resource_s{
     channel_t channel;
+    uint8_t *rnti;
     uint8_t *ctx;
 }resource_t;
 
